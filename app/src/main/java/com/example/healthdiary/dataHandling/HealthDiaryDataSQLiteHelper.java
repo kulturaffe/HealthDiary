@@ -7,10 +7,6 @@ import net.zetetic.database.sqlcipher.SQLiteOpenHelper;
 
 import java.util.Objects;
 
-/**
- * since it is unfortunately not possible to obtain historic weather data with the given API-key but historic other measurements can be saved,
- * temperature is stored in a separate table with its own timestamp (also accounting for limited refresh-rates of the api and internal caching via OKHttp)
- */
 public class HealthDiaryDataSQLiteHelper extends SQLiteOpenHelper implements IHealthDiaryDataDb {
     protected HealthDiaryDataSQLiteHelper(Context ctx, String db_name, String pwd) {
         super(ctx, db_name, pwd,null,DB_VERSION,0,null,null,true);

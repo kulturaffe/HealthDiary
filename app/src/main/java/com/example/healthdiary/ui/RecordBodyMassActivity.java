@@ -2,9 +2,10 @@ package com.example.healthdiary.ui;
 
 import com.example.healthdiary.R;
 import com.example.healthdiary.dataHandling.APICaller;
-import com.example.healthdiary.dataHandling.DataRepository;
-import com.example.healthdiary.dataHandling.HealthDiaryDAO;
+import com.example.healthdiary.dataHandling.HealthDiaryDataDAO;
 import com.example.healthdiary.dataTypes.BodyMassReading;
+import com.example.healthdiary.dataTypes.HealthDiaryPatient;
+import com.example.healthdiary.dataTypes.Location;
 import com.example.healthdiary.dataTypes.TemperatureReading;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -33,20 +34,25 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class RecordBodyMassActivity extends AppCompatActivity {
-    HealthDiaryDAO dbDAO;
+    HealthDiaryDataDAO dbDAO;
     CompletableFuture<TemperatureReading> tempFuture;
+    private HealthDiaryPatient currentPatient;
+    private Location currentLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record_body_mass);
 
+        currentPatient = getIntent().getParcelableExtra(getString(R.string.current_pat));
+        currentLocation = getIntent().getParcelableExtra(getString(R.string.current_loc));
+
+        // api for weather
         if(isNetworkAvailable())
             tempFuture = new APICaller(getApplicationContext()).getCurrentWeatherFromStr("Vienna");
         else
@@ -60,7 +66,7 @@ public class RecordBodyMassActivity extends AppCompatActivity {
         }
 
         // get writeable database
-        dbDAO = new HealthDiaryDAO(this);
+        dbDAO = new HealthDiaryDataDAO(this, currentPatient.hexSha256());
         // chosen date
         AtomicReference<String> dateFallback = new AtomicReference<>(getString(R.string.now));
         setChosenDate(masterKeyAliasRef.get(), dateFallback.get());
@@ -100,7 +106,7 @@ public class RecordBodyMassActivity extends AppCompatActivity {
             long rowidM, rowidT;
             BodyMassReading resultM;
 
-            long patientId = Objects.requireNonNull(DataRepository.getInstance().getPatient().getValue()).getId();
+            long patientId = currentPatient.getId();
             if(chosenDate.getText().toString().equals(getString(R.string.now))){
                 resultM = new BodyMassReading(bodyMass, patientId);
             } else {
@@ -155,12 +161,12 @@ public class RecordBodyMassActivity extends AppCompatActivity {
                     EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             );
-            currentDate = sharedPreferences.getString(getString(R.string.key),currentDate);
+            currentDate = sharedPreferences.getString(getString(R.string.key1),currentDate);
             if(getString(R.string.now).equals(currentDate)){
                 currentDate = fallbackString;
                 Log.d(getString(R.string.log_tag),String.format("Accessing encrypted shared preference in BodyMassActivity failed, masterKeyAlias = '%s'\n",masterKeyAlias));
             }
-            if(getString(R.string.default_value).equals(currentDate)) currentDate = fallbackString;
+            if(getString(R.string.default_value1).equals(currentDate)) currentDate = fallbackString;
         } catch (GeneralSecurityException | IOException e){
             currentDate = fallbackString;
             Log.w(getString(R.string.log_tag),String.format("Error accessing encrypted shared preference in BodyMassActivity, masterKeyAlias = '%s'\n",masterKeyAlias), e);

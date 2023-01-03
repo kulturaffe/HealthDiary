@@ -5,22 +5,17 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.Objects;
 
 public class HealthDiaryPatient implements Parcelable {
-    private long id = 0;
+    private long id = -2;
     private String firstNames, lastName, ssn, addressLine, zip, country;
     private Date dob;
 
-    /**
-     * @return <code>firstNames</code> <code>lastNames</code>, SSN: <code>ssn</code>
-     */
-    @NonNull
-    @Override
-    public String toString() {
-        return firstNames + " " + lastName + ", SSN: " + ssn;
-    }
 
     /** only for testing purposes. */
     public HealthDiaryPatient(){
@@ -42,7 +37,8 @@ public class HealthDiaryPatient implements Parcelable {
         this.country = country;
         this.dob = birthDate;
     }
-    public HealthDiaryPatient(String firstNames, String lastName, String ssn, String addressLine, String zipCode, String country, long birthDateUnixEpochMs){
+    public HealthDiaryPatient(long id, String firstNames, String lastName, String ssn, String addressLine, String zipCode, String country, long birthDateUnixEpochMs){
+        this.id = id;
         this.firstNames = firstNames;
         this.lastName = lastName;
         this.ssn = ssn;
@@ -75,6 +71,12 @@ public class HealthDiaryPatient implements Parcelable {
     }
     public long getDobTs(){
         return dob.getTime();
+    }
+    public String getZip() {
+        return zip;
+    }
+    public String getCountry() {
+        return country;
     }
 
     protected HealthDiaryPatient(Parcel in) {
@@ -127,6 +129,53 @@ public class HealthDiaryPatient implements Parcelable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getFirstNames(), getLastName(), getSsn(), getAddressLine(), zip, country, getDob());
+        return Objects.hash(getId(), getFirstNames(), getLastName(), getSsn(), getAddressLine(), getZip(), getCountry(), getDob());
+    }
+
+    /**
+     * @return hex-string of sha256 digest or, if SHA-256 is not found, string of decimal {@link Objects#hashCode}
+     */
+    public String hexSha256() {
+        String s = getId() + getFirstNames() + getLastName() + getSsn() + getAddressLine() + getZip() + getCountry() + getDob();
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            return byteToHexString(md.digest(s.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException should_not_happen) {
+            should_not_happen.printStackTrace();
+            return String.valueOf(hashCode());
+        }
+    }
+
+
+    /**
+     * @return <code>firstNames</code> <code>lastNames</code>, YYYY-mm-dd, id
+     */
+    public String toValueOnlyString() {
+        return firstNames + " " + lastName + ", " + String.format("%tF",dob) + ", " + id;
+    }
+
+    @Override
+    public String toString() {
+        return "HealthDiaryPatient{" +
+                "id=" + id +
+                ", firstNames='" + firstNames + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", ssn='" + ssn + '\'' +
+                ", addressLine='" + addressLine + '\'' +
+                ", zip='" + zip + '\'' +
+                ", country='" + country + '\'' +
+                ", dob=" + String.format("%tF",dob) +
+                '}';
+    }
+    /**
+     * @param payload byte array
+     * @return big endian hex representation or empty string if null
+     */
+    public static String byteToHexString(byte[] payload) {
+        if (payload == null) return "";
+        StringBuilder stringBuilder = new StringBuilder(payload.length);
+        for (byte byteChar : payload)
+            stringBuilder.append(String.format("%02x", byteChar));
+        return stringBuilder.toString();
     }
 }

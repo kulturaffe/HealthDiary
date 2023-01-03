@@ -53,21 +53,26 @@
     <string name="toast_invalid_m_value">Enter number between 5 and 300 kg</string>
     <string name="toast_unsuccessful_api_call">Getting temperature failed, maybe check your internet connection?</string>
 
-    <string name="pref_file_key">com.example.healthdiary.1cd71639e30bffd64088d54142b33759</string>
-    <string name="key">5fc732311905cb27e82d67f4f6511f7f</string>
-    <string name="default_value">8383673bf4eb93d51c31cad1aa94ba49</string>
-    <string name="key2">baf4c6df36af5d3e1e034e6403922ca9</string>
-    <string name="default_value2">76e76ab9b3a97b4df1f331c47459ccc2</string>
+    <!-- a little more obfuscation in the naming of encrypted shared prefs. emulator was slow with 256-bits hashes, so SHAKE-128 with 128 output-bits should be enough -->
+    <string name="pref_file_key">com.example.healthdiary.d289c38f03b32c4469c65dd9f8b35823</string>
+    <string name="key1">628eec52ab4be8134f9495f4b5d8c37e</string>
+    <string name="default_value1">4fe9ecf2d6edfc02c83f469019a5374a</string>
+    <string name="key2">33adcd7ff5141ff6b4ac8d9ff2d383ab</string>
+    <string name="default_value2">ce329d3ca881118b05a385a11a1b67de</string>
+    <string name="key3">f5108516a67af6a4c2742398d4b3ade9</string>
+    <string name="default_value3">9ccb0f993d91e0a243a4d9e85ca216e8</string>
 
     <string name="nav_open">Open</string>
     <string name="nav_close">Close</string>
     <!-- Strings related to choosing/creating patient -->
-    <string name="create_new">Create new patient</string>
-    <string name="choose_existing">log in as existing patient</string>
+    <string name="create_new_long">Create new patient</string>
+    <string name="choose_existing_long">log in as existing patient</string>
+    <string name="create_new_short">Create</string>
+    <string name="action_sign_in_short">Sign in</string>
 
 
     <string name="action_sign_in">Sign in or register</string>
-    <string name="action_sign_in_short">Sign in</string>
+
     <string name="welcome">"Welcome!"</string>
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_password">Password must be >5 characters</string>
@@ -75,5 +80,5 @@
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
 <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 </resources>

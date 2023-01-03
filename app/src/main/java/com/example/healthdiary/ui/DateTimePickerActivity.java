@@ -43,7 +43,7 @@ public class DateTimePickerActivity extends AppCompatActivity {
                     EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             );
-            previousDate = sharedPreferences.getString(getString(R.string.key),"");
+            previousDate = sharedPreferences.getString(getString(R.string.key1),"");
         } catch (GeneralSecurityException | IOException e){
             Log.w(getString(R.string.log_tag),String.format("Error accessing encrypted shared preference in DateTimePicker, masterKeyAlias = '%s'\n",masterKeyAliasRef.get()), e);
         }
@@ -120,7 +120,7 @@ public class DateTimePickerActivity extends AppCompatActivity {
                     EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             );
-            sharedPreferences.edit().putString(getString(R.string.key),msg).apply();
+            sharedPreferences.edit().putString(getString(R.string.key1),msg).apply();
             Log.d(getString(R.string.log_tag),String.format("Wrote to encrypted shared preference in DateTimePicker: %s'\n",msg));
             setResult(RESULT_OK);
         } catch (GeneralSecurityException | IOException e){

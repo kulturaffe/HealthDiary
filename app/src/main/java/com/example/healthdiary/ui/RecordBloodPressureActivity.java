@@ -22,9 +22,10 @@ import android.widget.Toast;
 
 import com.example.healthdiary.R;
 import com.example.healthdiary.dataHandling.APICaller;
-import com.example.healthdiary.dataHandling.DataRepository;
-import com.example.healthdiary.dataHandling.HealthDiaryDAO;
+import com.example.healthdiary.dataHandling.HealthDiaryDataDAO;
 import com.example.healthdiary.dataTypes.BloodPressureReading;
+import com.example.healthdiary.dataTypes.HealthDiaryPatient;
+import com.example.healthdiary.dataTypes.Location;
 import com.example.healthdiary.dataTypes.TemperatureReading;
 
 import java.io.IOException;
@@ -33,18 +34,25 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class RecordBloodPressureActivity extends AppCompatActivity {
-    HealthDiaryDAO dbDAO;
-    CompletableFuture<TemperatureReading> tempFuture;
+    private HealthDiaryDataDAO dbDAO;
+    private CompletableFuture<TemperatureReading> tempFuture;
+    private HealthDiaryPatient currentPatient;
+    private Location currentLocation;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record_blood_pressure);
+
+        currentPatient = getIntent().getParcelableExtra(getString(R.string.current_pat));
+        Log.d(getString(R.string.log_tag),"Got Patient in BloodPressureActivity: " + currentPatient);
+        currentLocation = getIntent().getParcelableExtra(getString(R.string.current_loc));
+        Log.d(getString(R.string.log_tag),"Got Location in BloodPressureActivity: " + currentLocation);
 
         // start API-call for weather
         if(isNetworkAvailable())
@@ -53,7 +61,7 @@ public class RecordBloodPressureActivity extends AppCompatActivity {
             Toast.makeText(this, getString(R.string.toast_no_internet), Toast.LENGTH_SHORT).show();
 
         // get writable db
-        dbDAO = new HealthDiaryDAO(this);
+        dbDAO = new HealthDiaryDataDAO(this, currentPatient.hexSha256());
 
         AtomicReference<String> masterKeyAliasRef = new AtomicReference<>(""); // to make string accessible inside lambda
         try {
@@ -111,8 +119,7 @@ public class RecordBloodPressureActivity extends AppCompatActivity {
             TextView chosenDate = findViewById(R.id.textViewBpChosenDate);
             long rowidBp, rowidT;
             BloodPressureReading resultBp;
-            long patientId = Objects.requireNonNull(DataRepository.getInstance().getPatient().getValue()).getId();
-            Log.d(getString(R.string.log_tag),"Got Patient: " + DataRepository.getInstance().getPatient().getValue().toString());
+            long patientId = currentPatient.getId();
             if(chosenDate.getText().toString().equals(getString(R.string.now))){
                 resultBp =new BloodPressureReading(sys,dia, patientId);
             } else {
@@ -172,12 +179,12 @@ public class RecordBloodPressureActivity extends AppCompatActivity {
                     EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             );
-            currentDate = sharedPreferences.getString(getString(R.string.key),currentDate);
+            currentDate = sharedPreferences.getString(getString(R.string.key1),currentDate);
             if(getString(R.string.now).equals(currentDate)) {
                 currentDate = fallback;
                 Log.d(getString(R.string.log_tag),String.format("Accessing encrypted shared preference in BloodPressureActivity failed, masterKeyAlias = '%s'\n",masterKeyAlias));
             }
-            if(getString(R.string.default_value).equals(currentDate)) currentDate = fallback;
+            if(getString(R.string.default_value1).equals(currentDate)) currentDate = fallback;
         } catch (GeneralSecurityException | IOException e){
             currentDate = fallback;
             Log.w(getString(R.string.log_tag),String.format("Error accessing encrypted shared preference in BloodPressureActivity, masterKeyAlias = '%s'\n",masterKeyAlias), e);

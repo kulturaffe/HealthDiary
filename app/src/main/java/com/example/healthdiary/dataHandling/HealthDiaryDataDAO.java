@@ -22,22 +22,21 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-public class HealthDiaryDAO implements IHealthDiaryDataDb, Closeable {
+public class HealthDiaryDataDAO implements IHealthDiaryDataDb, Closeable {
     private final SQLiteDatabase db;
     private final HealthDiaryDataSQLiteHelper dbHelper;
 
-     public HealthDiaryDAO(Context ctx) throws SQLiteDatabaseCorruptException{
+     public HealthDiaryDataDAO(Context ctx, String patientHash) throws SQLiteDatabaseCorruptException{
          System.loadLibrary("sqlcipher");
-         String db_name = String.format(DB_NAME_BASE, Objects.requireNonNull(DataRepository.getInstance().getPatient().getValue()).hashCode());
+         String db_name = String.format(DB_NAME_BASE, patientHash);
          dbHelper = new HealthDiaryDataSQLiteHelper(ctx, db_name, getPref(ctx));
          db = dbHelper.getWritableDatabase();
      }
 
-    public HealthDiaryDAO(Context ctx,String pw) throws SQLiteDatabaseCorruptException/* if wrong pw or db corrupt*/, NullPointerException /*if no current patient*/ {
+    public HealthDiaryDataDAO(Context ctx, String patientHash, String pw) throws SQLiteDatabaseCorruptException/* if wrong pw or db corrupt*/, NullPointerException /*if no current patient*/ {
         System.loadLibrary("sqlcipher");
-        String db_name = String.format(DB_NAME_BASE, Objects.requireNonNull(DataRepository.getInstance().getPatient().getValue()).hashCode());
+        String db_name = String.format(DB_NAME_BASE, patientHash);
         dbHelper = new HealthDiaryDataSQLiteHelper(ctx, db_name, pw);
         db = dbHelper.getWritableDatabase();
     }
@@ -201,12 +200,14 @@ public class HealthDiaryDAO implements IHealthDiaryDataDb, Closeable {
                     EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             );
+            // takes master-password for ease of use, can e changed to key3 for separate pw
             result = sharedPreferences.getString(ctx.getString(R.string.key2),ctx.getString(R.string.default_value2)) ;
-            if(ctx.getString(R.string.default_value2).equals(result)) Log.d(ctx.getString(R.string.log_tag),"Could not read encrypted shared pref in DAO");
-            else Log.d(ctx.getString(R.string.log_tag),"Read encrypted shared preferences in DAO");
+            if(ctx.getString(R.string.default_value2).equals(result)) Log.d(ctx.getString(R.string.log_tag),"Could not read encrypted shared pref in DataDAO");
+            // else if(ctx.getString(R.string.default_value3).equals(result)) Log.d(ctx.getString(R.string.log_tag),"User-pw set to default\u2026 (dataDAO)");
+            else Log.d(ctx.getString(R.string.log_tag),"Read encrypted shared preferences in DataDAO");
             return result;
         } catch (GeneralSecurityException | IOException e){
-            Log.w(ctx.getString(R.string.log_tag),"Error reading encrypted shared preference in DAO: ", e);
+            Log.w(ctx.getString(R.string.log_tag),"Error reading encrypted shared preference in DataDAO: ", e);
             return ctx.getString(R.string.default_value2);
         }
     }

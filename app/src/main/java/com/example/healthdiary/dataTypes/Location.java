@@ -9,8 +9,8 @@ import androidx.annotation.NonNull;
  * Represents a real-world location. coordinates are always degrees. name is typically in english but can be a local name.
  */
 public class Location implements Parcelable {
-    private double lat, lon;
-    private String name;
+    private double lat = Double.NaN, lon = Double.NaN;
+    private String name = null;
 
     public void setLat(double lat) {
         this.lat = lat;
@@ -68,6 +68,17 @@ public class Location implements Parcelable {
         name = in.readString();
     }
 
+    public String toValueOnlyString() {
+        if(!Double.isNaN(lat) && !Double.isNaN(lon) && null != name)
+            return name;
+        else if(!Double.isNaN(lat) && !Double.isNaN(lon) && null == name)
+            return  status.NAME.getText();
+        else if(Double.isNaN(lat) && Double.isNaN(lon) && null != name)
+            return status.COORD.getText();
+        else
+            return status.INVALID.getText();
+    }
+
     public static final Creator<Location> CREATOR = new Creator<Location>() {
         @Override
         public Location createFromParcel(Parcel in) {
@@ -90,5 +101,26 @@ public class Location implements Parcelable {
         dest.writeDouble(lat);
         dest.writeDouble(lon);
         dest.writeString(name);
+    }
+
+    @Override
+    public String toString() {
+        return "Location{" +
+                "lat=" + lat +
+                ", lon=" + lon +
+                ", name='" + name + '\'' +
+                '}';
+    }
+
+    public enum status{
+        NAME("fetching name\u2026"),
+        COORD("fetching coordinates\u2026"),
+        INVALID("invalid.");
+
+        private final String text;
+        status(String text) {
+            this.text = text;
+        }
+        public String getText(){return text;}
     }
 }
