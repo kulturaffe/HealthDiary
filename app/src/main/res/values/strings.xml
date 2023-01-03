@@ -1,0 +1,79 @@
+<resources>
+    <string name="app_name">Health Diary</string>
+    <string name="welcome_msg">Welcome to the Health Diary\n\t\t\t\t\t\t\t\tby Moritz Grob</string>
+    <string name="current_user">Current user:\u0020</string>
+    <string name="current_pat">current_patient</string>
+    <string name="current_loc">current_location</string>
+    <string name="current_location">Current location:\u0020</string>
+
+    <string name="goto_BP_activity">My Blood Pressure Record</string>
+    <string name="goto_mass_activity">My Body Mass Record</string>
+
+
+    <string name="record_Mass_prompt">Enter body mass in kg:</string>
+    <string name="average_prompt">average blood pressure and weight:</string>
+    <string name="last_prompt">last entered values:</string>
+    <string name="record_BP_prompt">Enter blood pressure in mmHg:</string>
+    <string name="sys_hint">systolic (bigger number)</string>
+    <string name="dia_hint">diastolic (smaller number)</string>
+
+    <string name="save">save</string>
+    <string name="rand">generate random values</string>
+    <string name="DateTimePicker_title">Pick a date and time</string>
+    <string name="DisplayListOfReadings_title">List of saved recordings</string>
+    <string name="show_all">show all</string>
+    <string name="change_date">change date</string>
+    <string name="date_chosen">Chosen date:\u0020</string>
+    <string name="now">\u0009\u0009now</string>
+    <string name="empty_list_item">nothing to see here\u2026 please move along!</string>
+    <string name="log_tag">MyTag</string>
+    <string name="readings_for_list_tag">readings</string>
+    <string name="no_avg">No readings yet.</string>
+    <string name="db_read_error">"error during accessing database :("</string>
+    <string name="avg_bp">averageBloodPressure</string>
+    <string name="avg_m">averageMass</string>
+    <string name="latest_bp">latestBloodPressure</string>
+    <string name="latest_m">latestMass</string>
+    <string name="latest_t">latestTemperature</string>
+    <string name="login_activity_title">Enter password for Health Diary</string>
+    <string name="default_password">default\n(insecure)</string>
+    <string name="login_activity_prompt">Please enter the master password for the database.\nIf you are using the app for the first time\nthis will set the password.\nPlease remember it carefully, otherwise\nyour data will be irretrievably lost.\nCannot be changed later.</string>
+    <string name="password_hint">password</string>
+    <string name="get_login">hey, it\'s me!</string>
+    <string name="toast_wrong_pwd">WRONG!</string>
+    <string name="toast_no_saved_pwd">no luck this time\u2026</string>
+    <string name="toast_no_escape">you cannot escape\u2026</string>
+    <string name="toast_no_internet">no internet connection\u2026</string>
+    <string name="toast_invalid_number">Please enter valid number</string>
+    <string name="toast_wait_for_api_call">Please wait a second for temperature check to finish</string>
+    <string name="toast_invalid_bp_values">Please call an ambulance!</string>
+    <string name="toast_dia_bigger_than_sys">Systolic has to be bigger than diastolic!</string>
+    <string name="toast_db_write_error">Error saving to database</string>
+    <string name="toast_invalid_dec_number">Please enter valid decimal number</string>
+    <string name="toast_invalid_m_value">Enter number between 5 and 300 kg</string>
+    <string name="toast_unsuccessful_api_call">Getting temperature failed, maybe check your internet connection?</string>
+
+    <string name="pref_file_key">com.example.healthdiary.1cd71639e30bffd64088d54142b33759</string>
+    <string name="key">5fc732311905cb27e82d67f4f6511f7f</string>
+    <string name="default_value">8383673bf4eb93d51c31cad1aa94ba49</string>
+    <string name="key2">baf4c6df36af5d3e1e034e6403922ca9</string>
+    <string name="default_value2">76e76ab9b3a97b4df1f331c47459ccc2</string>
+
+    <string name="nav_open">Open</string>
+    <string name="nav_close">Close</string>
+    <!-- Strings related to choosing/creating patient -->
+    <string name="create_new">Create new patient</string>
+    <string name="choose_existing">log in as existing patient</string>
+
+
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">"Welcome!"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">"Login failed"</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
