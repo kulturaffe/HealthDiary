@@ -1,7 +1,9 @@
 package com.example.healthdiary.ui;
 
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,35 +22,50 @@ import java.util.Objects;
  */
 public class ListAllPatientsFragment extends DialogFragment {
     HealthDiaryViewModel model;
-    HealthDiaryPatient[] allPatients;
     String[] allPatientNames;
+    HealthDiaryPatient chosenPatient;
 
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
-
         model = new ViewModelProvider(requireActivity()).get(HealthDiaryViewModel.class);
         setCancelable(model.getCancellable());
         List<HealthDiaryPatient> allPatientsList = model.getAllPatients().getValue();
         if(allPatientsList == null || allPatientsList.size() < 1){
-            model.setSelectedListItem(-10); // lower than -5: no patients available
+            model.setState(HealthDiaryViewModel.State.NOT_AVAILABLE);
             dismiss();
         }
 
-        int size = Objects.requireNonNull(allPatientsList).size(); // should be, because otherwise dismisses, so throwing NPE is okay
-        allPatients = new HealthDiaryPatient[size];
+        int size = Objects.requireNonNull(allPatientsList).size(); // should be, because otherwise dismisses, so throwing NPE should be okay
         allPatientNames = new String[size];
         for (int i = 0; i < size; i++){
-            allPatients[i] = allPatientsList.get(i);
             allPatientNames[i] = allPatientsList.get(i).toValueOnlyString();
         }
 
-        builder.setItems(allPatientNames, (dialog, which) -> {
-            model.setCurrentPatient(allPatients[which]);
-            model.setSelectedListItem(which);
-            dismiss();
+        // preselect current patient or none
+        int current = allPatientsList.indexOf(model.getCurrentPatient().getValue()); // -1 if not in list -> perfect!
+
+        AlertDialog dialog = builder.setPositiveButton(android.R.string.ok, null)
+                .setSingleChoiceItems(allPatientNames, current, (d, which) -> chosenPatient = allPatientsList.get(which))
+                .create();
+
+        // override the positive button to allow ok only when sthg is selected
+        dialog.setOnShowListener(d -> {
+            Button button = ((AlertDialog) d).getButton(AlertDialog.BUTTON_POSITIVE);
+            button.setOnClickListener(view -> {
+                if (chosenPatient != null){
+                    model.setCurrentPatient(chosenPatient);
+                    model.setState(HealthDiaryViewModel.State.DONE);
+                }
+            });
+
         });
-        return builder.create();
+        /*
+
+         */
+
+
+        return dialog;
     }
 }

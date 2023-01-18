@@ -8,6 +8,8 @@
 
     <string name="goto_BP_activity">My Blood Pressure Record</string>
     <string name="goto_mass_activity">My Body Mass Record</string>
+    <string name="goto_change_user">Change current user</string>
+    <string name="goto_change_location">Change location</string>
 
 
     <string name="record_Mass_prompt">Enter body mass in kg:</string>
@@ -53,7 +55,7 @@
     <string name="toast_invalid_m_value">Enter number between 5 and 300 kg</string>
     <string name="toast_unsuccessful_api_call">Getting temperature failed, maybe check your internet connection?</string>
 
-    <!-- a little more obfuscation in the naming of encrypted shared prefs. emulator was slow with 256-bits hashes, so SHAKE-128 with 128 output-bits should be enough -->
+    <!-- a little more obfuscation in the naming of encrypted shared prefs. -->
     <string name="pref_file_key">com.example.healthdiary.d289c38f03b32c4469c65dd9f8b35823</string>
     <string name="key1">628eec52ab4be8134f9495f4b5d8c37e</string>
     <string name="default_value1">4fe9ecf2d6edfc02c83f469019a5374a</string>
@@ -67,18 +69,21 @@
     <!-- Strings related to choosing/creating patient -->
     <string name="create_new_long">Create new patient</string>
     <string name="choose_existing_long">log in as existing patient</string>
-    <string name="create_new_short">Create</string>
+    <string name="create_new_short">Create new</string>
     <string name="action_sign_in_short">Sign in</string>
 
 
-    <string name="action_sign_in">Sign in or register</string>
+    <string name="permission_location_why">Why we ask for location permissions</string>
+    <string name="permission_location_explanation">Outside temperature is saved with all readings\nIf you deny location access, your location will default to Vienna, AT.\nThis can be changed manually later.\nIf your input is not recognised or no network is connected, no weather info will be gathered.</string>
+    <string name="default_location">"Location set to Vienna, AT"</string>
 
-    <string name="welcome">"Welcome!"</string>
+
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
-<!-- TODO: Remove or change this placeholder text -->
+    <string name="goto_medication_reminder">Add Medication Reminder</string>
+    <!-- TODO: Remove or change this placeholder text -->
 
 </resources>

@@ -5,7 +5,7 @@ import com.example.healthdiary.dataHandling.APICaller;
 import com.example.healthdiary.dataHandling.HealthDiaryDataDAO;
 import com.example.healthdiary.dataTypes.BodyMassReading;
 import com.example.healthdiary.dataTypes.HealthDiaryPatient;
-import com.example.healthdiary.dataTypes.Location;
+import com.example.healthdiary.dataTypes.HealthDiaryLocation;
 import com.example.healthdiary.dataTypes.TemperatureReading;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -42,7 +42,7 @@ public class RecordBodyMassActivity extends AppCompatActivity {
     HealthDiaryDataDAO dbDAO;
     CompletableFuture<TemperatureReading> tempFuture;
     private HealthDiaryPatient currentPatient;
-    private Location currentLocation;
+    private HealthDiaryLocation currentLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

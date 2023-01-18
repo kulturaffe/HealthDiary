@@ -32,7 +32,7 @@ public class DateTimePickerActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_date_time_picker);
-        Locale locale = getResources().getConfiguration().locale;
+        Locale locale = getResources().getConfiguration().getLocales().get(0);
         String previousDate = "";
         try {
             masterKeyAliasRef.set(MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC));

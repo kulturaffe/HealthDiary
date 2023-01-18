@@ -154,6 +154,7 @@ public class HealthDiaryPatient implements Parcelable {
         return firstNames + " " + lastName + ", " + String.format("%tF",dob) + ", " + id;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "HealthDiaryPatient{" +

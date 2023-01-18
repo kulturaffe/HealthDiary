@@ -1,13 +1,21 @@
 package com.example.healthdiary.ui;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKeys;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings.Secure;
@@ -21,9 +29,15 @@ import com.example.healthdiary.dataHandling.HealthDiaryDataDAO;
 import com.example.healthdiary.dataHandling.HealthDiaryUsersDAO;
 import com.example.healthdiary.dataHandling.HealthDiaryViewModel;
 import com.example.healthdiary.dataTypes.HealthDiaryPatient;
-import com.example.healthdiary.dataTypes.Location;
+import com.example.healthdiary.dataTypes.HealthDiaryLocation;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
+import com.google.android.gms.tasks.CancellationToken;
+import com.google.android.gms.tasks.OnTokenCanceledListener;
 
 import net.zetetic.database.sqlcipher.SQLiteDatabaseCorruptException;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
@@ -33,9 +47,19 @@ import java.util.Locale;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
     private SharedPreferences sharedPreferences = null;
-    private Intent resultIntent;
     private EditText etPw;
     private HealthDiaryViewModel model;
+    private FusedLocationProviderClient fusedLocationClient;
+
+    private final ActivityResultLauncher<String> mRequestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    model.setState(HealthDiaryViewModel.State.PERMISSION_GRANTED);
+                } else {
+                    model.setLocation(new HealthDiaryLocation());
+                    Toast.makeText(this, "Not granted, "+R.string.default_location, Toast.LENGTH_SHORT).show();
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,44 +67,83 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         setContentView(R.layout.activity_login);
 
         etPw = findViewById(R.id.editTextPassword);
-        resultIntent = new Intent();
-
         // Get the ViewModel
         model = new ViewModelProvider(this).get(HealthDiaryViewModel.class);
-        // observe selection state:
-        model.getSelectionState().observe(this, selection -> {
-            switch (selection){
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        // check if location permission is already granted, otherwise obtain it
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            model.setState(HealthDiaryViewModel.State.PERMISSION_GRANTED);
+        } else if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            showPermissionRationaleFragment();
+        } else {
+            model.setState(HealthDiaryViewModel.State.RATIONALE_SEEN);
+        }
+
+
+        // observe selection state for "business logic":
+        model.getState().observe(this, selection -> {
+            switch (selection) {
                 case LOGIN:
                     showListPatientsFragment();
                     break;
                 case CREATE_NEW:
                     showCreatePatientFragment();
                     break;
-                case CANCELLED: // should not happen
-                    showFirstFragment(); // again.
+                case CANCELLED: // should not be allowed to happen, but to be safe just show again
+                    showFirstFragment();
+                    break;
+                case NOT_AVAILABLE:
+                    Toast.makeText(this, "No saved users, please create a new one", Toast.LENGTH_SHORT).show();
+                    model.setState(HealthDiaryViewModel.State.CREATE_NEW);
+                    break;
+                case ADD:
+                    addNewUser();
+                    model.setState(HealthDiaryViewModel.State.DONE);
                     break;
                 case DONE:
                     if (confirmCurrentUser()) finish();
                     break;
-                case ADD:
-                    addCurrentUser();
-                    if (confirmCurrentUser()) finish();
+                case RATIONALE_SEEN:
+                    mRequestPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION);
+                    break;
+                case PERMISSION_GRANTED: // try last location
+                    LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                    // if network is available
+                    if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
+                        fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
+                            if (location != null) {
+                                model.setLocation(new HealthDiaryLocation(/*location.getLatitude(),location.getLongitude() lol*/));
+                                Log.d(getString(R.string.log_tag),String.format(Locale.ENGLISH,"Got last Location: lat %.2f, lon %.2f",location.getLatitude(),location.getLongitude()));
+                            }
+                            else // if no last, get current
+                                model.setState(HealthDiaryViewModel.State.NO_LAST_LOCATION);
+                        });
+                    }
+                    // without network, set to default and inform
+                    else {
+                        model.setLocation(new HealthDiaryLocation());
+                        Toast.makeText(this,"Location services seem to be turned off.\n"+ getString(R.string.default_location)+ ".\nTo automatically get current location, please enable location and restart app.",Toast.LENGTH_LONG).show();
+                    }
+                    break;
+                case NO_LAST_LOCATION: // get current location
+                    fusedLocationClient.getCurrentLocation(Priority.PRIORITY_LOW_POWER, null).addOnSuccessListener(location -> {
+                        if (location != null) {
+                            model.setLocation(new HealthDiaryLocation(/*location.getLatitude(),location.getLongitude()*/));
+                            Log.d(getString(R.string.log_tag),String.format(Locale.ENGLISH,"Got current Location: lat %.2f, lon %.2f",location.getLatitude(),location.getLongitude()));
+                        }
+                        else {   // if something went wrong, set to default and inform:
+                            model.setLocation(new HealthDiaryLocation());
+                            Toast.makeText(this,"Something went wrong\u2026 "+ getString(R.string.default_location),Toast.LENGTH_SHORT).show();
+                        }
+                    });
                     break;
                 default:
                     break;
             }
         });
-        // observe selected list item from login-list
-        model.getSelectedListItem().observe(this, idx -> {
-            Log.d(getString(R.string.log_tag),String.format(Locale.ENGLISH,"Index selected: %d",idx));
-            if (idx < -5){
-                Toast.makeText(this,"No saved users, please create a new one",Toast.LENGTH_SHORT).show();
-                model.setSelectionState(HealthDiaryViewModel.PatientSelectionState.CREATE_NEW);
-            }
-            if(idx >= 0){
-                showLoginPatientFragment();
-            }
-        });
+
 
         // get shared pref for saved pw
         try {
@@ -94,7 +157,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             );
 
         } catch (GeneralSecurityException | IOException e){
-            Log.w(getString(R.string.log_tag),"Error reading encrypted shared preference Login", e);
+            Log.w(getString(R.string.log_tag),"Error reading encrypted shared preference (loginActivity)", e);
         }
 
         // save button
@@ -156,11 +219,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         }
         // was confirmed, so ask how to proceed:
         showFirstFragment();
-        // leave the rest to status-observer
+        // leave the rest of the logic to status-observer
     }
 
     private void showFirstFragment(){
-        DialogFragment frag = new PatientFragment();
+        DialogFragment frag = new ChangePatientFragment();
         frag.show(getSupportFragmentManager(),"proceedHow");
     }
 
@@ -174,12 +237,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         frag.show(getSupportFragmentManager(),"listAll");
     }
 
-    private void showLoginPatientFragment(){
-        DialogFragment frag = new LoginPatientFragment();
-        frag.show(getSupportFragmentManager(),"login");
+    private void showPermissionRationaleFragment(){
+        DialogFragment frag = new PermissionRationaleFragment();
+        frag.show(getSupportFragmentManager(),"permission");
     }
 
-    protected boolean confirmMaster(String pwd) {
+    boolean confirmMaster(String pwd) {
         String savedPwd = null != sharedPreferences ? sharedPreferences.getString(getString(R.string.key2), "") : null;
         // if getting pwd from sharedPrefs worked but doesn't match input, reject
         if (null != savedPwd && !"".equals(savedPwd) && !pwd.equals(savedPwd)) return false;
@@ -197,8 +260,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         return true;
     }
 
-    private void addCurrentUser(){
-        HealthDiaryPatient patient = model.getCurrentPatient().getValue();
+     void addNewUser(){
+        HealthDiaryPatient patient = model.getNewPatient().getValue();
         if(patient == null || patient.getId() >= 0) return;
         try (HealthDiaryUsersDAO dao = new HealthDiaryUsersDAO(this, sharedPreferences.getString(getString(R.string.key2), ""))) {
             patient.setId(dao.addPatient(patient));
@@ -209,23 +272,28 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     }
 
-    private boolean confirmCurrentUser(){
+     boolean confirmCurrentUser(){
         HealthDiaryPatient patient = model.getCurrentPatient().getValue();
+        HealthDiaryLocation location = model.getLocation().getValue();
+        if(location == null){
+            location = new HealthDiaryLocation();
+            Toast.makeText(this, R.string.default_location, Toast.LENGTH_SHORT).show();
+        }
         if(patient == null || patient.getId() < 0){
-            Toast.makeText(this,"could nor confirm user",Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,"could not confirm user",Toast.LENGTH_SHORT).show();
             return false;
         }
         try (HealthDiaryDataDAO dao = new HealthDiaryDataDAO(this, patient.hexSha256())) {
-            setResult(RESULT_OK, resultIntent.
+            setResult(RESULT_OK, new Intent().
                     putExtra(getString(R.string.current_pat), patient).
-                    putExtra(getString(R.string.current_loc), new Location()).
+                    putExtra(getString(R.string.current_loc), location).
                     putExtra(getString(R.string.avg_bp), dao.getAverageBloodPressure()).
                     putExtra(getString(R.string.avg_m), dao.getAverageBodyMass()).
                     putExtra(getString(R.string.latest_bp),dao.getLatestBloodPressure()).
                     putExtra(getString(R.string.latest_m),dao.getLatestBodyMass()).
                     putExtra(getString(R.string.latest_t),dao.getLatestTemperature()));
         } catch (SQLiteDatabaseCorruptException wrong_pw_for_existing_db) {
-            Log.d(getString(R.string.log_tag),"Could");
+            Log.d(getString(R.string.log_tag),"Could not get average for current user\u2026 (loginActivity)");
             return false;
         }
         return true;

@@ -16,19 +16,19 @@ import java.util.Locale;
  */
 public class TemperatureReading extends HealthDiaryMeasurement implements Parcelable {
     private final double temp;
-    private final Location location;
+    private final HealthDiaryLocation location;
     public static final String loinc = "LP101925-8"; // only the Temperature.ambient component since there is no code for outdoor-temp
 
     protected TemperatureReading(Parcel in) {
         super(in.readString(), in.readLong(), in.readLong(), in.readLong());
         temp = in.readDouble();
-        location = new Location(in.readDouble(),in.readDouble(),in.readString());
+        location = new HealthDiaryLocation(in.readDouble(),in.readDouble(),in.readString());
     }
 
     public double getTemperature(){return temp;}
     public String getLocationName(){return location.getName();}
     /**
-     * wrapper around the {@link Location#getCoordinates()}-method.
+     * wrapper around the {@link HealthDiaryLocation#getCoordinates()}-method.
      * @return double[2] in the order: Latitude, Longitude
      */
     public double[] getCoordinates(){return location.getCoordinates();}
@@ -41,9 +41,9 @@ public class TemperatureReading extends HealthDiaryMeasurement implements Parcel
         super(isNaN(temp)?"N/A":"\u00b0C",-1);
         this.temp = temp;
         if(!isNaN(temp)){
-            location = new Location();
+            location = new HealthDiaryLocation();
         } else{
-            location = new Location(Double.NaN,Double.NaN,"");
+            location = new HealthDiaryLocation(Double.NaN,Double.NaN,"");
         }
 
     }
@@ -51,13 +51,13 @@ public class TemperatureReading extends HealthDiaryMeasurement implements Parcel
     public TemperatureReading(double temp, double lat, double lon, String loc, long timeStamp) {
         super("\u00b0C",-1, timeStamp);
         this.temp = temp;
-        location = new Location(lat,lon,loc);
+        location = new HealthDiaryLocation(lat,lon,loc);
     }
 
     public TemperatureReading(double temperature, String unit, double latitude, double longitude, String locationName, long timeStamp) {
         super(unit,-1,timeStamp);
         temp = temperature;
-        location = new Location(latitude,longitude,locationName);
+        location = new HealthDiaryLocation(latitude,longitude,locationName);
     }
 
     @NonNull

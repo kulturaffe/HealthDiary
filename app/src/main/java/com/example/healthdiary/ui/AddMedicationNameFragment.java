@@ -2,6 +2,8 @@ package com.example.healthdiary.ui;
 
 import android.app.Dialog;
 import android.os.Bundle;
+import android.text.InputType;
+import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -9,11 +11,11 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.healthdiary.R;
 import com.example.healthdiary.dataHandling.HealthDiaryViewModel;
-import com.example.healthdiary.dataTypes.HealthDiaryPatient;
 
 
-public class CreatePatientFragment extends DialogFragment {
+public class AddMedicationNameFragment extends DialogFragment {
     HealthDiaryViewModel model;
 
     @NonNull
@@ -21,13 +23,14 @@ public class CreatePatientFragment extends DialogFragment {
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
         model = new ViewModelProvider(requireActivity()).get(HealthDiaryViewModel.class);
-        setCancelable(model.getCancellable());
 
-        builder.setTitle("create test patient")
-                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-            model.setNewPatient(new HealthDiaryPatient());
-            model.setState(HealthDiaryViewModel.State.ADD);
-        });
+        final EditText input = new EditText(requireActivity().getApplicationContext());
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
+
+        builder.setTitle(R.string.permission_location_why)
+                .setMessage(R.string.permission_location_explanation)
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> model.setMedicationName(input.getText().toString()))
+                .setNegativeButton(android.R.string.cancel, (d,w) -> d.cancel());
         return builder.create();
     }
 }
