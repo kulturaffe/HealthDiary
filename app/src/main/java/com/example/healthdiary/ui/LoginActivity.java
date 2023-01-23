@@ -57,7 +57,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     model.setState(HealthDiaryViewModel.State.PERMISSION_GRANTED);
                 } else {
                     model.setLocation(new HealthDiaryLocation());
-                    Toast.makeText(this, "Not granted, "+R.string.default_location, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Not granted, "+getString(R.string.default_location), Toast.LENGTH_SHORT).show();
                 }
             });
 

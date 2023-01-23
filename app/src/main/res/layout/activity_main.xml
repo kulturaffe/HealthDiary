@@ -26,11 +26,10 @@
             android:id="@+id/textViewLastTemp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="9dp"
+            android:layout_marginTop="8dp"
             android:text=""
             android:textSize="14sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@+id/textViewLastBp"
             app:layout_constraintStart_toStartOf="@+id/textViewLastBp"
             app:layout_constraintTop_toBottomOf="@+id/textViewLastM" />
 
@@ -42,7 +41,6 @@
             android:text=""
             android:textSize="14sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@+id/textViewLastBp"
             app:layout_constraintStart_toStartOf="@+id/textViewLastBp"
             app:layout_constraintTop_toBottomOf="@+id/textViewLastBp" />
 
@@ -84,24 +82,23 @@
             android:id="@+id/textViewAvgBp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:layout_marginTop="10dp"
             android:text=""
             android:textSize="14sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@+id/textViewAvgM"
-            app:layout_constraintStart_toStartOf="@+id/textViewAvgM"
+            app:layout_constraintStart_toStartOf="@+id/textViewAveragePrompt"
             app:layout_constraintTop_toBottomOf="@+id/textViewAveragePrompt" />
 
         <TextView
             android:id="@+id/textViewAvgM"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             android:text=""
             android:textSize="14sp"
             android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="@+id/textViewLastPrompt"
+            app:layout_constraintStart_toStartOf="@+id/textViewAvgBp"
             app:layout_constraintTop_toBottomOf="@+id/textViewAvgBp" />
 
         <TextView

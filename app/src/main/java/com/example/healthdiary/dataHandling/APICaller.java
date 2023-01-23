@@ -67,7 +67,7 @@ public class APICaller {
     public CompletableFuture<HealthDiaryLocation> getDirectGeo(String query) {
 
         try {
-            query = URLEncoder.encode(query.trim(),"UTF-8");
+            query = URLEncoder.encode(query.trim(),"UTF-8"); // sanitising user input
         } catch (UnsupportedEncodingException e) {
             query = "";
         }
@@ -89,6 +89,7 @@ public class APICaller {
 
 
     private TemperatureReading doMakeCallHistoric(Call<WeatherResponseHistoricalPOJO> call) {
+
         return new TemperatureReading(Double.NaN);
     }
 

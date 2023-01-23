@@ -150,10 +150,9 @@ public class RecordBodyMassActivity extends AppCompatActivity {
         ));
     }
 
-    protected void setChosenDate(String masterKeyAlias, String fallbackString){
+    protected void setChosenDate(String masterKeyAlias, String fallback){
         String currentDate = getString(R.string.now);
         try {
-            masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC);
             SharedPreferences sharedPreferences = EncryptedSharedPreferences.create(
                     getString(R.string.pref_file_key),
                     masterKeyAlias,
@@ -162,17 +161,23 @@ public class RecordBodyMassActivity extends AppCompatActivity {
                     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             );
             currentDate = sharedPreferences.getString(getString(R.string.key1),currentDate);
-            if(getString(R.string.now).equals(currentDate)){
-                currentDate = fallbackString;
-                Log.d(getString(R.string.log_tag),String.format("Accessing encrypted shared preference in BodyMassActivity failed, masterKeyAlias = '%s'\n",masterKeyAlias));
+            if(getString(R.string.now).equals(currentDate)) {
+                currentDate = fallback;
+                Log.d(getString(R.string.log_tag),String.format("Accessing encrypted shared preference in BloodPressureActivity failed, masterKeyAlias = '%s'\n",masterKeyAlias));
             }
-            if(getString(R.string.default_value1).equals(currentDate)) currentDate = fallbackString;
+            if(getString(R.string.default_value1).equals(currentDate)) currentDate = fallback;
         } catch (GeneralSecurityException | IOException e){
-            currentDate = fallbackString;
-            Log.w(getString(R.string.log_tag),String.format("Error accessing encrypted shared preference in BodyMassActivity, masterKeyAlias = '%s'\n",masterKeyAlias), e);
+            currentDate = fallback;
+            Log.w(getString(R.string.log_tag),String.format("Error accessing encrypted shared preference in BloodPressureActivity, masterKeyAlias = '%s'\n",masterKeyAlias), e);
         }
-        TextView chosenDate = findViewById(R.id.textViewMChosenDate);
-        chosenDate.setText(currentDate);
+        TextView chosenDate = findViewById(R.id.textViewBpChosenDate);
+        try{
+            Date date = new Date(Long.parseLong(currentDate));
+            chosenDate.setText(String.format(Locale.ENGLISH,"%tFT%tT.%tLZ",date,date,date));
+
+        } catch (NumberFormatException e){
+            chosenDate.setText(currentDate);
+        }
     }
 
     private boolean isNetworkAvailable() {

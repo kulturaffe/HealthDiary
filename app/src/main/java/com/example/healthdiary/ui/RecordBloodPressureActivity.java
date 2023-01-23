@@ -34,6 +34,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
@@ -73,6 +74,7 @@ public class RecordBloodPressureActivity extends AppCompatActivity {
         // chosen date
         AtomicReference<String> dateFallback = new AtomicReference<>(getString(R.string.now));
         setChosenDate(masterKeyAliasRef.get(),dateFallback.get());
+
         ActivityResultLauncher<Intent> mStartForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == RESULT_OK) {
                 if(null != result.getData()){
@@ -190,7 +192,13 @@ public class RecordBloodPressureActivity extends AppCompatActivity {
             Log.w(getString(R.string.log_tag),String.format("Error accessing encrypted shared preference in BloodPressureActivity, masterKeyAlias = '%s'\n",masterKeyAlias), e);
         }
         TextView chosenDate = findViewById(R.id.textViewBpChosenDate);
-        chosenDate.setText(currentDate);
+        try{
+            Date date = new Date(Long.parseLong(currentDate));
+            chosenDate.setText(String.format(Locale.ENGLISH,"%tFT%tT.%tLZ",date,date,date));
+
+        } catch (NumberFormatException e){
+            chosenDate.setText(currentDate);
+        }
     }
 
     private boolean isNetworkAvailable() {

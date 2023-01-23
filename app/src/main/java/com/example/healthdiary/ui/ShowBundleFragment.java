@@ -1,6 +1,7 @@
 package com.example.healthdiary.ui;
 
 import android.app.Dialog;
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -11,12 +12,9 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.healthdiary.R;
 import com.example.healthdiary.dataHandling.HealthDiaryViewModel;
-import com.example.healthdiary.dataTypes.HealthDiaryPatient;
 
-
-public class PermissionRationaleFragment extends DialogFragment {
+public class ShowBundleFragment extends DialogFragment {
     HealthDiaryViewModel model;
-
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -24,9 +22,18 @@ public class PermissionRationaleFragment extends DialogFragment {
         model = new ViewModelProvider(requireActivity()).get(HealthDiaryViewModel.class);
         setCancelable(model.getCancellable());
 
-        builder.setTitle(R.string.permission_location_why)
-                .setMessage(R.string.permission_location_explanation)
-                .setPositiveButton(android.R.string.ok, (dialog, which) -> model.setState(HealthDiaryViewModel.State.RATIONALE_SEEN));
+        builder.setTitle("The resource:")
+                .setMessage(model.getFhirResource().getValue())
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> dismiss()).
+                setNeutralButton(R.string.share,(dialog, which) -> {
+                    Intent sendIntent = new Intent();
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, model.getFhirResource().getValue());
+                    sendIntent.setType("text/plain");
+
+                    Intent shareIntent = Intent.createChooser(sendIntent, null);
+                    startActivity(shareIntent);
+                });
         return builder.create();
     }
 }

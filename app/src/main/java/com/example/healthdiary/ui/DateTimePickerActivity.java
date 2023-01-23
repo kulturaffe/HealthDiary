@@ -19,6 +19,7 @@ import com.example.healthdiary.R;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicReference;
@@ -47,22 +48,33 @@ public class DateTimePickerActivity extends AppCompatActivity {
         } catch (GeneralSecurityException | IOException e){
             Log.w(getString(R.string.log_tag),String.format("Error accessing encrypted shared preference in DateTimePicker, masterKeyAlias = '%s'\n",masterKeyAliasRef.get()), e);
         }
-// the passed date-string
+
         Calendar cal =  Calendar.getInstance(TimeZone.getDefault(),locale); // now, extra parameters in constructor are probably not really necessary but don't hurt as well
 
         // DatePicker
         DatePicker datePicker = findViewById(R.id.simpleDatePicker);
         datePicker.setMaxDate(cal.getTimeInMillis());
-        Pattern datePattern = Pattern.compile("^([0-9]{4})-(12|11|10|0[1-9])-(31|30|[012][0-9]).*"); // is passed string a useful date f
-        Matcher matcher = datePattern.matcher(previousDate);
-        matcher.matches(); // necessary to fill the groups
+        //Pattern datePattern = Pattern.compile("^([0-9]{4})-(12|11|10|0[1-9])-(31|30|[012][0-9]).*"); // is passed string a useful date f
+        //Matcher matcher = datePattern.matcher(previousDate);
+        Pattern tsPattern = Pattern.compile("^[0-9]*$");
+        Matcher matcher = tsPattern.matcher(previousDate);
+        if(matcher.matches()){
+            Date date = new Date(Long.parseLong(previousDate));
+            datePicker.updateDate(Integer.parseInt(String.format("%tY",date)),Integer.parseInt(String.format("%tm",date))-1,Integer.parseInt(String.format(Locale.ENGLISH,"%td",date)));
+        } else{
+            // set picker to now
+            datePicker.updateDate(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH),cal.get(Calendar.DATE));
+
+        }
+
+        /*
         try { // instead of an if-statement, if there is a NullPointerException the passed string could not be recognized as a useful date (there are not enough groups)
                 datePicker.updateDate(Integer.parseInt(matcher.group(1)),Integer.parseInt(matcher.group(2))-1,Integer.parseInt(matcher.group(3)));
             } catch (Exception e){
                 // Log.d("MyTag","   Date couldn't be parsed:\""+previousDate+"\"\n",e);
                 // set calendar to now
                 datePicker.updateDate(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH),cal.get(Calendar.DATE));
-        }
+        }*/
 
         // TimePicker
         TimePicker timePicker = findViewById(R.id.simpleTimePicker);
@@ -92,13 +104,13 @@ public class DateTimePickerActivity extends AppCompatActivity {
             int secondsNow = (secNowInMillis / 1000);
 
             // put together a nicely iso8601-formatted string with selected date save
-            resultString = String.format(locale,"%04d-%02d-%02dT%02d:%02d:%02d.%03d%s",
-                    cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),cal.get(Calendar.DATE), cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), secondsNow, millisNow, timeZoneString);
+            //resultString = String.format(locale,"%04d-%02d-%02dT%02d:%02d:%02d.%03d%s",
+            //        cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),cal.get(Calendar.DATE), cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), secondsNow, millisNow, timeZoneString);
 
             // legacy but also fallback: send result back
-            setResult(RESULT_OK,new Intent().putExtra("DateTime",resultString));
+            setResult(RESULT_OK,new Intent().putExtra("DateTime",String.valueOf(cal.getTimeInMillis())));
             //save to sharedpref:
-            saveToESP(resultString);
+            saveToESP(String.valueOf((cal.getTimeInMillis())));
             finish();
         });
 

@@ -7,6 +7,7 @@ import android.os.Parcelable;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 public abstract class HealthDiaryMeasurement implements Parcelable {
@@ -56,10 +57,14 @@ public abstract class HealthDiaryMeasurement implements Parcelable {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             return Instant.ofEpochMilli(timeStamp).toString();
         } else {
+            /*
             @SuppressLint("SimpleDateFormat")
             SimpleDateFormat iso8601date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
             iso8601date.setTimeZone(TimeZone.getTimeZone("UTC"));
             return iso8601date.format(new Date(timeStamp));
+             */
+            Date d = new Date(timeStamp);
+            return String.format(Locale.ENGLISH,"%tFT%tT.%tLZ",d,d,d);
         }
     }
 

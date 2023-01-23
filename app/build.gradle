@@ -1,7 +1,11 @@
 plugins {
     id 'com.android.application'
 }
-
+configurations {
+    all*.exclude group: 'org.codehaus.woodstox'
+    all*.exclude group: 'org.apache.httpcomponents'
+    all*.exclude group: 'com.android.support'
+}
 android {
     compileSdk 33
 
@@ -36,7 +40,7 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.5.1'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
     implementation 'com.google.android.gms:play-services-location:21.0.1'
-    String lifecycle_version = "2.5.1"
+    def lifecycle_version = "2.5.1"
     // ViewModel
     implementation "androidx.lifecycle:lifecycle-viewmodel:$lifecycle_version"
     // LiveData
@@ -72,6 +76,13 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.10'
     implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.10'
     implementation 'com.amplitude:android-sdk:3.35.1'
+
+    // notification
+    implementation 'com.github.jakebonk:NotifyMe:1.0.1'
+
+    // fhir
+    implementation "ca.uhn.hapi.fhir:hapi-fhir-android:6.2.4"
+    implementation "ca.uhn.hapi.fhir:hapi-fhir-structures-r4:6.2.4"
 
     // testing:
     testImplementation 'junit:junit:4.13.2'

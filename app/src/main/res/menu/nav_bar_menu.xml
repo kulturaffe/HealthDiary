@@ -28,4 +28,9 @@
         android:title="@string/goto_medication_reminder"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/export_fhir"
+        android:title="@string/export_fhir_resource"
+        app:showAsAction="never" />
+
 </menu>

@@ -21,7 +21,9 @@ import java.util.Locale;
 public class BloodPressureReading extends HealthDiaryMeasurement implements Parcelable {
     private final int sys;
     private final int dia;
-    public static final String loinc = "55284-4";
+    public static final String loinc = "35094-2";
+    public static final String loincSys = "8480-6";
+    public static final String loincDia = "8462-4";
 
     // needed for Parcelable-interface in order to be quickly and safely passed between activities as intent-extras
     public static final Creator<BloodPressureReading> CREATOR = new Creator<BloodPressureReading>() {

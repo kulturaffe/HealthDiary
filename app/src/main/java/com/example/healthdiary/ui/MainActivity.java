@@ -35,6 +35,7 @@ import net.zetetic.database.sqlcipher.SQLiteDatabaseCorruptException;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Locale;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
@@ -150,8 +151,22 @@ public class MainActivity extends AppCompatActivity {
                 showAddNotificationFragment();
             }
         });
+        // observe medication time for usr-notification notification
+        model.getMedicationTime().observe(this, time ->{
+            if (time != null && time.length == 2){
+                Toast.makeText(this, String.format(Locale.ENGLISH,"You will be notified to take %s at %02d:%02d for a month", model.getMedicationName().getValue(),time[0],time[1]),Toast.LENGTH_LONG).show();
+                model.setMedicationName("").clearMedicationTime();
+            }
+        });
 
-        // observe status for change of patient
+        // observe fhir-string to show
+        model.getFhirResource().observe(this, res ->{
+            if (res != null && !res.isEmpty()){
+                showShowBundleFragment();
+            }
+        });
+
+        // observe status for change of patient-logic
         model.getState().observe(this, state ->{
             switch (state){
                 case LOGIN:
@@ -201,11 +216,13 @@ public class MainActivity extends AppCompatActivity {
                     showFirstFragment();
                 }
                 else if (id == R.id.change_location){
-                    // TODO
                     Toast.makeText(this,"to be implemented",Toast.LENGTH_SHORT).show();
                 }
                 else if(id == R.id.add_medication_reminder){
                     showAddMedicationNameFragment();
+                }
+                else if(id == R.id.export_fhir){
+                    model.createFhirResource();
                 }
             drawerLayout.closeDrawer(GravityCompat.START);
             return true;
@@ -264,9 +281,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showAddNotificationFragment(){
-        DialogFragment frag = new CreatePatientFragment();
+        DialogFragment frag = new AddMedicationNotificationFragment();
         frag.show(getSupportFragmentManager(),"medicationTime");
     }
+
+    private void showShowBundleFragment(){
+        DialogFragment frag = new ShowBundleFragment();
+        frag.show(getSupportFragmentManager(),"resource");
+    }
+
 
     private void showListPatientsFragment(){
         if(null == model.getAllPatients().getValue() || model.getAllPatients().getValue().size() < 1){

@@ -17,7 +17,6 @@ import com.example.healthdiary.dataHandling.HealthDiaryViewModel;
 
 public class AddMedicationNameFragment extends DialogFragment {
     HealthDiaryViewModel model;
-
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -27,8 +26,8 @@ public class AddMedicationNameFragment extends DialogFragment {
         final EditText input = new EditText(requireActivity().getApplicationContext());
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
 
-        builder.setTitle(R.string.permission_location_why)
-                .setMessage(R.string.permission_location_explanation)
+        builder.setTitle("enter name of the medication:")
+                .setView(input)
                 .setPositiveButton(android.R.string.ok, (dialog, which) -> model.setMedicationName(input.getText().toString()))
                 .setNegativeButton(android.R.string.cancel, (d,w) -> d.cancel());
         return builder.create();

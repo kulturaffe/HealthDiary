@@ -57,6 +57,7 @@ public class ListAllPatientsFragment extends DialogFragment {
                 if (chosenPatient != null){
                     model.setCurrentPatient(chosenPatient);
                     model.setState(HealthDiaryViewModel.State.DONE);
+                    dismiss();
                 }
             });
 
