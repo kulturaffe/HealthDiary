@@ -32,6 +32,7 @@ import java.security.GeneralSecurityException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Random;
@@ -43,6 +44,7 @@ public class RecordBodyMassActivity extends AppCompatActivity {
     CompletableFuture<TemperatureReading> tempFuture;
     private HealthDiaryPatient currentPatient;
     private HealthDiaryLocation currentLocation;
+    private long currentTs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,12 +54,6 @@ public class RecordBodyMassActivity extends AppCompatActivity {
         currentPatient = getIntent().getParcelableExtra(getString(R.string.current_pat));
         currentLocation = getIntent().getParcelableExtra(getString(R.string.current_loc));
 
-        // api for weather
-        if(isNetworkAvailable())
-            tempFuture = new APICaller(getApplicationContext()).getCurrentWeatherFromStr("Vienna");
-        else
-            Toast.makeText(this, getString(R.string.toast_no_internet), Toast.LENGTH_SHORT).show();
-
         AtomicReference<String> masterKeyAliasRef = new AtomicReference<>(""); // atomic reference instead of string for easier use in lambdas (activity result handler)
         try {
             masterKeyAliasRef.set(MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC));
@@ -65,20 +61,23 @@ public class RecordBodyMassActivity extends AppCompatActivity {
             Log.w(getString(R.string.log_tag),"getting masterKeyAlias in BodyMassActivity failed: ",e);
         }
 
-        // get writeable database
-        dbDAO = new HealthDiaryDataDAO(this, currentPatient.hexSha256());
         // chosen date
         AtomicReference<String> dateFallback = new AtomicReference<>(getString(R.string.now));
-        setChosenDate(masterKeyAliasRef.get(), dateFallback.get());
+        currentTs = setChosenDate(masterKeyAliasRef.get(), dateFallback.get());
         //date launcher
         ActivityResultLauncher<Intent> mStartForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == RESULT_OK) {
                 if(null != result.getData()){
                     dateFallback.set(result.getData().getStringExtra("DateTime"));
                 }
-                setChosenDate(masterKeyAliasRef.get(),dateFallback.get());
+                currentTs = setChosenDate(masterKeyAliasRef.get(),dateFallback.get());
+                makeWeatherApiCall();
             }
         });
+        makeWeatherApiCall();
+
+        // get writeable database
+        dbDAO = new HealthDiaryDataDAO(this, currentPatient.hexSha256());
 
         EditText massView = findViewById(R.id.editTextWeight);
         // generate rand values
@@ -150,8 +149,13 @@ public class RecordBodyMassActivity extends AppCompatActivity {
         ));
     }
 
-    protected void setChosenDate(String masterKeyAlias, String fallback){
+    /**
+     * @return currently chosen timestamp in ms
+     */
+    protected long setChosenDate(String masterKeyAlias, String fallback){
+        Log.d("MyTag",String.format("chosen date fallback: %s",fallback));
         String currentDate = getString(R.string.now);
+        long ts = -1L;
         try {
             SharedPreferences sharedPreferences = EncryptedSharedPreferences.create(
                     getString(R.string.pref_file_key),
@@ -163,27 +167,40 @@ public class RecordBodyMassActivity extends AppCompatActivity {
             currentDate = sharedPreferences.getString(getString(R.string.key1),currentDate);
             if(getString(R.string.now).equals(currentDate)) {
                 currentDate = fallback;
+                ts = new Date().getTime();
                 Log.d(getString(R.string.log_tag),String.format("Accessing encrypted shared preference in BloodPressureActivity failed, masterKeyAlias = '%s'\n",masterKeyAlias));
             }
-            if(getString(R.string.default_value1).equals(currentDate)) currentDate = fallback;
+            if(getString(R.string.default_value1).equals(currentDate)) {
+                currentDate = fallback;
+                ts = new Date().getTime();
+            }
         } catch (GeneralSecurityException | IOException e){
             currentDate = fallback;
+            ts = new Date().getTime();
             Log.w(getString(R.string.log_tag),String.format("Error accessing encrypted shared preference in BloodPressureActivity, masterKeyAlias = '%s'\n",masterKeyAlias), e);
         }
-        TextView chosenDate = findViewById(R.id.textViewBpChosenDate);
+        TextView chosenDate = findViewById(R.id.textViewMChosenDate);
         try{
             Date date = new Date(Long.parseLong(currentDate));
             chosenDate.setText(String.format(Locale.ENGLISH,"%tFT%tT.%tLZ",date,date,date));
-
+            ts = date.getTime();
         } catch (NumberFormatException e){
             chosenDate.setText(currentDate);
         }
+        return ts;
     }
 
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager != null ? connectivityManager.getActiveNetworkInfo() : null;
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    private void makeWeatherApiCall(){
+        if(isNetworkAvailable())
+            tempFuture = new APICaller(getApplicationContext()).getHistoricalWeatherForLocation(currentLocation,currentTs);
+        else
+            Toast.makeText(this, getString(R.string.toast_no_internet), Toast.LENGTH_SHORT).show();
     }
 
     @Override

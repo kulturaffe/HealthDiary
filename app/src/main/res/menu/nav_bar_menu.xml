@@ -4,16 +4,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/change_patient"
-        android:title="@string/goto_change_user"
-        app:showAsAction="never" />
-
-    <item
-        android:id="@+id/change_location"
-        android:title="@string/goto_change_location"
-        app:showAsAction="never" />
-
-    <item
         android:id="@+id/blood_pressure_record"
         android:title="@string/goto_BP_activity"
         app:showAsAction="never" />
@@ -28,6 +18,15 @@
         android:title="@string/goto_medication_reminder"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/change_patient"
+        android:title="@string/goto_change_user"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/change_location"
+        android:title="@string/goto_change_location"
+        app:showAsAction="never" />
     <item
         android:id="@+id/export_fhir"
         android:title="@string/export_fhir_resource"

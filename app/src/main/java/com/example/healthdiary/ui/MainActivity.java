@@ -1,6 +1,11 @@
 package com.example.healthdiary.ui;
 
+import static com.example.healthdiary.dataTypes.HealthDiaryLocation.Status.INVALID;
+import static com.example.healthdiary.dataTypes.HealthDiaryLocation.Status.MISSING_COORD;
+import static com.example.healthdiary.dataTypes.HealthDiaryLocation.Status.MISSING_NAME;
+
 import com.example.healthdiary.R;
+import com.example.healthdiary.dataHandling.APICaller;
 import com.example.healthdiary.dataHandling.HealthDiaryDataDAO;
 import com.example.healthdiary.dataHandling.HealthDiaryUsersDAO;
 import com.example.healthdiary.dataHandling.HealthDiaryViewModel;
@@ -22,8 +27,11 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKeys;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -35,6 +43,7 @@ import net.zetetic.database.sqlcipher.SQLiteDatabaseCorruptException;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -102,7 +111,19 @@ public class MainActivity extends AppCompatActivity {
                 HealthDiaryLocation newLocation = result.getData().getParcelableExtra(getString(R.string.current_loc));
                 if (null != newLocation){
                     model.setLocation(newLocation);
+                    Log.d(getString(R.string.log_tag),String.format("Got location: %s",newLocation));
                 }
+                // all pressures
+                List<BloodPressureReading> allBPs = result.getData().getParcelableArrayListExtra("all_pressures");
+                if(null != allBPs){
+                    model.setAllBpReadings(allBPs);
+                }
+                // all masses
+                List<BodyMassReading> allMs = result.getData().getParcelableArrayListExtra("all_masses");
+                if(null != allMs){
+                    model.setAllMReadings(allMs);
+                }
+
 
             } else if ("".equals(avgBpView.getText().toString()) && "".equals(avgMView.getText().toString()))
                 avgBpView.setText(getString(R.string.db_read_error));
@@ -142,8 +163,31 @@ public class MainActivity extends AppCompatActivity {
             if (location != null){
                 String txt = getString(R.string.current_location)+ location.toValueOnlyString();
                 currentLocationView.setText(txt);
+                if(isNetworkAvailable()){
+                    APICaller caller = new APICaller(getApplicationContext());
+                    if(location.getStatus() == MISSING_COORD){
+                        caller.getDirectGeo(location.getName()).whenComplete((result,exception)->{
+                            if (exception != null) {
+                                Log.e("MyTag","Exception during direct geo");
+                            } else {
+                                model.postLocation(result);
+                            }
+                        });
+                    }
+                    if(location.getStatus() == MISSING_NAME){
+                        caller.getReverseGeo(location.getLat(),location.getLon()).whenComplete((result,exception)->{
+                            if (exception != null) {
+                                Log.e("MyTag","Exception during direct geo");
+                            } else {
+                                model.postLocation(result);
+                                Log.d("MyTag",String.format("WHEN COMPLETE, result: %s",result));
+                            }
+                        });
+                    }
+                } else Toast.makeText(this, getString(R.string.toast_no_internet)+"No weather info can be fetched..", Toast.LENGTH_LONG).show();
             }
         });
+
 
         // observe medication name for setting of time and notification
         model.getMedicationName().observe(this, medication ->{
@@ -203,20 +247,22 @@ public class MainActivity extends AppCompatActivity {
         navView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
                 if (id == R.id.blood_pressure_record)  {
+                    HealthDiaryLocation loc = model.getLocation().getValue();
                     mStartForAverage.launch(new Intent(getApplicationContext(), RecordBloodPressureActivity.class)
                             .putExtra(getString(R.string.current_pat), model.getCurrentPatient().getValue())
-                            .putExtra(getString(R.string.current_loc), model.getLocation().getValue()));
+                            .putExtra(getString(R.string.current_loc), Objects.requireNonNull(loc).getStatus() != INVALID ? loc : null));
                 }
                 else if(id == R.id.body_mass_record) {
+                    HealthDiaryLocation loc = model.getLocation().getValue();
                     mStartForAverage.launch(new Intent(getApplicationContext(), RecordBodyMassActivity.class)
                             .putExtra(getString(R.string.current_pat), model.getCurrentPatient().getValue())
-                            .putExtra(getString(R.string.current_loc), model.getLocation().getValue()));
+                            .putExtra(getString(R.string.current_loc), Objects.requireNonNull(loc).getStatus() != INVALID ? loc : null));
                 }
                 else if(id == R.id.change_patient){
                     showFirstFragment();
                 }
                 else if (id == R.id.change_location){
-                    Toast.makeText(this,"to be implemented",Toast.LENGTH_SHORT).show();
+                    showEnterLocationNameFragment();
                 }
                 else if(id == R.id.add_medication_reminder){
                     showAddMedicationNameFragment();
@@ -290,6 +336,11 @@ public class MainActivity extends AppCompatActivity {
         frag.show(getSupportFragmentManager(),"resource");
     }
 
+    private void showEnterLocationNameFragment(){
+        DialogFragment frag = new EnterLocationNameFragment();
+        frag.show(getSupportFragmentManager(),"locationName");
+    }
+
 
     private void showListPatientsFragment(){
         if(null == model.getAllPatients().getValue() || model.getAllPatients().getValue().size() < 1){
@@ -330,6 +381,9 @@ public class MainActivity extends AppCompatActivity {
             BodyMassReading latestM = dao.getLatestBodyMass();
             TemperatureReading lastT = dao.getLatestTemperature();
 
+            model.setAllBpReadings(dao.getBloodPressureReadings());
+            model.setAllMReadings(dao.getBodyMassReadings());
+
             if (null != avgBp.toValueOnlyString())
                 avgBpView.setText(avgBp.toValueOnlyString());
             else
@@ -366,5 +420,11 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
         return true;
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager != null ? connectivityManager.getActiveNetworkInfo() : null;
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 }

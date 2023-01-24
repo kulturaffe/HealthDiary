@@ -84,8 +84,7 @@
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="goto_medication_reminder">Add Medication Reminder</string>
-    <string name="export_fhir_resource">Export</string>
+    <string name="export_fhir_resource">Export to FHIR resource</string>
     <string name="share">share</string>
-    <!-- TODO: Remove or change this placeholder text -->
 
 </resources>

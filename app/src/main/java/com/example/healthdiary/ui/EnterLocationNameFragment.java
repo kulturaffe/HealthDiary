@@ -12,9 +12,9 @@ import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.healthdiary.dataHandling.HealthDiaryViewModel;
+import com.example.healthdiary.dataTypes.HealthDiaryLocation;
 
-
-public class AddMedicationNameFragment extends DialogFragment {
+public class EnterLocationNameFragment extends DialogFragment {
     HealthDiaryViewModel model;
     @NonNull
     @Override
@@ -25,9 +25,9 @@ public class AddMedicationNameFragment extends DialogFragment {
         final EditText input = new EditText(requireActivity().getApplicationContext());
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
 
-        builder.setTitle("enter name of the medication:")
+        builder.setTitle("enter name of the new location:")
                 .setView(input)
-                .setPositiveButton(android.R.string.ok, (dialog, which) -> model.setMedicationName(input.getText().toString()))
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> model.setLocation(new HealthDiaryLocation(input.getText().toString())))
                 .setNegativeButton(android.R.string.cancel, (d,w) -> d.cancel());
         return builder.create();
     }

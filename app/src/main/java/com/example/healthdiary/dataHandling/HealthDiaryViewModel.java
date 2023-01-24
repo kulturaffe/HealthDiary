@@ -38,7 +38,6 @@ public class HealthDiaryViewModel extends ViewModel {
     private final MutableLiveData<List<HealthDiaryPatient>> allPatients = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<List<BloodPressureReading>> allBpReadings = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<List<BodyMassReading>> allMReadings = new MutableLiveData<>(new ArrayList<>());
-
     private final MutableLiveData<HealthDiaryLocation> currentLocation = new MutableLiveData<>();
     private final MutableLiveData<State> viewState = new MutableLiveData<>(State.NONE);
     private final MutableLiveData<Boolean> cancellable = new MutableLiveData<>(false);
@@ -89,9 +88,15 @@ public class HealthDiaryViewModel extends ViewModel {
     public LiveData<HealthDiaryLocation> getLocation(){
         return currentLocation;
     }
-    public void setLocation(HealthDiaryLocation newLocation){
+    public HealthDiaryViewModel setLocation(HealthDiaryLocation newLocation){
         currentLocation.setValue(newLocation);
+        return this;
     }
+    public HealthDiaryViewModel postLocation(HealthDiaryLocation newLocation){
+        currentLocation.postValue(newLocation);
+        return this;
+    }
+
 
     public LiveData<State> getState(){
         return viewState;

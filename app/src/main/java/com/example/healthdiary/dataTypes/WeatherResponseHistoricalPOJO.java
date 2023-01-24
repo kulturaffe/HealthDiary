@@ -74,7 +74,7 @@ public class WeatherResponseHistoricalPOJO {
     })
     public static class Datum {
         @JsonProperty("dt")
-        private int dt;
+        private long dt;
         @JsonProperty("sunrise")
         private int sunrise;
         @JsonProperty("sunset")
@@ -103,7 +103,7 @@ public class WeatherResponseHistoricalPOJO {
         private List<Weather> weather;
 
         @JsonProperty("dt")
-        public int getDt() {
+        public long getDt() {
             return dt;
         }
         @JsonProperty("sunrise")

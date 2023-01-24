@@ -1,7 +1,7 @@
 package com.example.healthdiary.dataHandling;
 
 interface IHealthDiaryDataDb {
-    int DB_VERSION = 1;
+    int DB_VERSION = 2;
     String DB_NAME_BASE = "health_diary_%s.db",
             KEY_ID = "_id",
             KEY_UNIT = "unit",

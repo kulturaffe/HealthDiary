@@ -18,6 +18,7 @@ import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.provider.Settings.Secure;
 import android.util.Log;
 import android.view.View;
@@ -43,6 +44,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Locale;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
@@ -114,7 +116,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
                         fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
                             if (location != null) {
-                                model.setLocation(new HealthDiaryLocation(/*location.getLatitude(),location.getLongitude() lol*/));
+                                model.setLocation(new HealthDiaryLocation(location.getLatitude(),location.getLongitude() /*lol*/));
                                 Log.d(getString(R.string.log_tag),String.format(Locale.ENGLISH,"Got last Location: lat %.2f, lon %.2f",location.getLatitude(),location.getLongitude()));
                             }
                             else // if no last, get current
@@ -130,7 +132,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 case NO_LAST_LOCATION: // get current location
                     fusedLocationClient.getCurrentLocation(Priority.PRIORITY_LOW_POWER, null).addOnSuccessListener(location -> {
                         if (location != null) {
-                            model.setLocation(new HealthDiaryLocation(/*location.getLatitude(),location.getLongitude()*/));
+                            model.setLocation(new HealthDiaryLocation(location.getLatitude(),location.getLongitude()/**/));
                             Log.d(getString(R.string.log_tag),String.format(Locale.ENGLISH,"Got current Location: lat %.2f, lon %.2f",location.getLatitude(),location.getLongitude()));
                         }
                         else {   // if something went wrong, set to default and inform:
@@ -277,7 +279,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         HealthDiaryLocation location = model.getLocation().getValue();
         if(location == null){
             location = new HealthDiaryLocation();
-            Toast.makeText(this, R.string.default_location, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.default_location), Toast.LENGTH_SHORT).show();
         }
         if(patient == null || patient.getId() < 0){
             Toast.makeText(this,"could not confirm user",Toast.LENGTH_SHORT).show();
@@ -291,7 +293,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     putExtra(getString(R.string.avg_m), dao.getAverageBodyMass()).
                     putExtra(getString(R.string.latest_bp),dao.getLatestBloodPressure()).
                     putExtra(getString(R.string.latest_m),dao.getLatestBodyMass()).
-                    putExtra(getString(R.string.latest_t),dao.getLatestTemperature()));
+                    putExtra(getString(R.string.latest_t),dao.getLatestTemperature()).
+                    putParcelableArrayListExtra("all_pressures", (ArrayList<? extends Parcelable>) dao.getBloodPressureReadings())
+                    .putParcelableArrayListExtra("all_masses", (ArrayList<? extends Parcelable>) dao.getBodyMassReadings()));
         } catch (SQLiteDatabaseCorruptException wrong_pw_for_existing_db) {
             Log.d(getString(R.string.log_tag),"Could not get average for current user\u2026 (loginActivity)");
             return false;

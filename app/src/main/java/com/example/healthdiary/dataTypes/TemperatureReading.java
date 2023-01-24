@@ -45,7 +45,6 @@ public class TemperatureReading extends HealthDiaryMeasurement implements Parcel
         } else{
             location = new HealthDiaryLocation(Double.NaN,Double.NaN,"");
         }
-
     }
 
     public TemperatureReading(double temp, double lat, double lon, String loc, long timeStamp) {

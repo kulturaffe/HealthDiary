@@ -44,6 +44,7 @@ public class RecordBloodPressureActivity extends AppCompatActivity {
     private CompletableFuture<TemperatureReading> tempFuture;
     private HealthDiaryPatient currentPatient;
     private HealthDiaryLocation currentLocation;
+    private long currentTs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,15 +56,6 @@ public class RecordBloodPressureActivity extends AppCompatActivity {
         currentLocation = getIntent().getParcelableExtra(getString(R.string.current_loc));
         Log.d(getString(R.string.log_tag),"Got Location in BloodPressureActivity: " + currentLocation);
 
-        // start API-call for weather
-        if(isNetworkAvailable())
-            tempFuture = new APICaller(getApplicationContext()).getCurrentWeatherFromStr("Vienna");
-        else
-            Toast.makeText(this, getString(R.string.toast_no_internet), Toast.LENGTH_SHORT).show();
-
-        // get writable db
-        dbDAO = new HealthDiaryDataDAO(this, currentPatient.hexSha256());
-
         AtomicReference<String> masterKeyAliasRef = new AtomicReference<>(""); // to make string accessible inside lambda
         try {
             masterKeyAliasRef.set(MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC));
@@ -73,16 +65,22 @@ public class RecordBloodPressureActivity extends AppCompatActivity {
 
         // chosen date
         AtomicReference<String> dateFallback = new AtomicReference<>(getString(R.string.now));
-        setChosenDate(masterKeyAliasRef.get(),dateFallback.get());
+        currentTs = setChosenDate(masterKeyAliasRef.get(),dateFallback.get());
 
         ActivityResultLauncher<Intent> mStartForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == RESULT_OK) {
                 if(null != result.getData()){
                     dateFallback.set(result.getData().getStringExtra("DateTime"));
                 }
-                setChosenDate(masterKeyAliasRef.get(),dateFallback.get());
+                currentTs = setChosenDate(masterKeyAliasRef.get(),dateFallback.get());
+                makeWeatherApiCall();
             }
         });
+
+        makeWeatherApiCall();
+
+        // get writable db
+        dbDAO = new HealthDiaryDataDAO(this, currentPatient.hexSha256());
 
         // button generate rand values
         EditText sysView = findViewById(R.id.editTextSys);
@@ -171,8 +169,12 @@ public class RecordBloodPressureActivity extends AppCompatActivity {
 
     }
 
-    protected void setChosenDate(String masterKeyAlias, String fallback){
+    /**
+     * @return currently chosen timestamp in ms
+     */
+    protected long setChosenDate(String masterKeyAlias, String fallback){
         String currentDate = getString(R.string.now);
+        long ts = -1L;
         try {
             SharedPreferences sharedPreferences = EncryptedSharedPreferences.create(
                     getString(R.string.pref_file_key),
@@ -184,21 +186,35 @@ public class RecordBloodPressureActivity extends AppCompatActivity {
             currentDate = sharedPreferences.getString(getString(R.string.key1),currentDate);
             if(getString(R.string.now).equals(currentDate)) {
                 currentDate = fallback;
+                ts = new Date().getTime();
                 Log.d(getString(R.string.log_tag),String.format("Accessing encrypted shared preference in BloodPressureActivity failed, masterKeyAlias = '%s'\n",masterKeyAlias));
             }
-            if(getString(R.string.default_value1).equals(currentDate)) currentDate = fallback;
+            if(getString(R.string.default_value1).equals(currentDate)) {
+                currentDate = fallback;
+                ts = new Date().getTime();
+            }
         } catch (GeneralSecurityException | IOException e){
             currentDate = fallback;
+            ts = new Date().getTime();
             Log.w(getString(R.string.log_tag),String.format("Error accessing encrypted shared preference in BloodPressureActivity, masterKeyAlias = '%s'\n",masterKeyAlias), e);
         }
         TextView chosenDate = findViewById(R.id.textViewBpChosenDate);
         try{
             Date date = new Date(Long.parseLong(currentDate));
             chosenDate.setText(String.format(Locale.ENGLISH,"%tFT%tT.%tLZ",date,date,date));
-
+            ts = date.getTime();
         } catch (NumberFormatException e){
             chosenDate.setText(currentDate);
         }
+        return ts;
+    }
+
+    private void makeWeatherApiCall(){
+        if(isNetworkAvailable())
+            tempFuture = new APICaller(getApplicationContext()).getHistoricalWeatherForLocation(currentLocation,currentTs);
+        else
+            Toast.makeText(this, getString(R.string.toast_no_internet), Toast.LENGTH_SHORT).show();
+
     }
 
     private boolean isNetworkAvailable() {

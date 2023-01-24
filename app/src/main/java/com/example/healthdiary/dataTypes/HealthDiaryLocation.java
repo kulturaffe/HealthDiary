@@ -29,6 +29,13 @@ public class HealthDiaryLocation implements Parcelable {
         status = validate();
     }
 
+    public HealthDiaryLocation(){
+        lat = 48.23925;
+        lon = 16.37811;
+        name = "Vienna";
+        status = Status.COMPLETE;
+    }
+
     protected HealthDiaryLocation(Parcel in) {
         lat = in.readDouble();
         lon = in.readDouble();
@@ -58,8 +65,11 @@ public class HealthDiaryLocation implements Parcelable {
         return this;
     }
 
-    public HealthDiaryLocation setStatus(Status newStatus) {
-        if(newStatus == Status.INVALID ) status = newStatus;
+    public HealthDiaryLocation setStatusInvalid() {
+        name = "invalid";
+        lat = Double.NaN;
+        lon = Double.NEGATIVE_INFINITY;
+        status = validate();
         return this;
     }
     public Status getStatus() { return status; }
@@ -79,19 +89,11 @@ public class HealthDiaryLocation implements Parcelable {
     /** @return double[2] in the order: Latitude, Longitude */
     public double[] getCoordinates(){return new double[]{lat, lon};}
 
-    public HealthDiaryLocation(){
-        lat = 48.23925;
-        lon = 16.37811;
-        name = "Vienna";
-        status = Status.COMPLETE;
-    }
-
 
     public String toValueOnlyString() {
         if(status == Status.COMPLETE)
             return name;
         else return status.getText();
-
     }
 
     public static final Creator<HealthDiaryLocation> CREATOR = new Creator<HealthDiaryLocation>() {
@@ -125,18 +127,18 @@ public class HealthDiaryLocation implements Parcelable {
                 "lat=" + lat +
                 ", lon=" + lon +
                 ", name='" + name + '\'' +
-                ", status=" +
+                ", status=" + status +
                 '}';
     }
 
     private Status validate(){
         return !Double.isNaN(lat) && !Double.isNaN(lon) && null != name && !"".equals(name) ?
                 Status.COMPLETE :
-                !Double.isNaN(lat) && !Double.isNaN(lon) ?
+                !Double.isNaN(lat) && !Double.isNaN(lon) && null == name ?
                         Status.MISSING_NAME :
-                        "".equals(name) ?
+                        !Double.isNaN(lat) && !Double.isNaN(lon) &&"".equals(name) ?
                                 Status.NO_NAME :
-                                null != name?
+                                Double.isNaN(lat) && Double.isNaN(lon) && null != name?
                                         Status.MISSING_COORD :
                                         Status.INVALID;
     }
@@ -147,7 +149,6 @@ public class HealthDiaryLocation implements Parcelable {
         COMPLETE("complete!"),
         INVALID("invalid/none."),
         NO_NAME("no name found for coordinates");
-
 
         private final String text;
         Status(String text) {
