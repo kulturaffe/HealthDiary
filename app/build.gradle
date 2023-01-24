@@ -77,8 +77,8 @@ dependencies {
     implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.10'
     implementation 'com.amplitude:android-sdk:3.35.1'
 
-    // notification
-    implementation 'com.github.jakebonk:NotifyMe:1.0.1'
+    // notification not android-x compatible
+    // implementation 'com.github.jakebonk:NotifyMe:1.0.1'
 
     // fhir
     implementation "ca.uhn.hapi.fhir:hapi-fhir-android:6.2.4"

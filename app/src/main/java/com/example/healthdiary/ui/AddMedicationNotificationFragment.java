@@ -9,11 +9,10 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.allyants.notifyme.NotifyMe;
+//import com.allyants.notifyme.NotifyMe;
 import com.example.healthdiary.dataHandling.HealthDiaryViewModel;
 
 import java.util.Calendar;
-import java.util.Objects;
 
 public class AddMedicationNotificationFragment extends DialogFragment implements TimePickerDialog.OnTimeSetListener {
     HealthDiaryViewModel model;
@@ -33,8 +32,7 @@ public class AddMedicationNotificationFragment extends DialogFragment implements
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
         String name = model.getMedicationName().getValue();
         // build the notification
-        NotifyMe.Builder notifyMe = new NotifyMe.Builder(requireActivity().getApplicationContext());
-        // TODO i think this will not work with androidx :/
+        //NotifyMe.Builder notifyMe = new NotifyMe.Builder(requireActivity().getApplicationContext());
         model.setMedicationTime(hourOfDay, minute);
     }
 }
